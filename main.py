@@ -1,5 +1,9 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext
+import os
+from dotenv import load_dotenv
+from text_filling import *
+
 
 # Главное меню
 def main_menu_keyboard():
@@ -8,6 +12,7 @@ def main_menu_keyboard():
         [InlineKeyboardButton("Позвать оператора", callback_data='call_operator')]
     ]
     return InlineKeyboardMarkup(keyboard)
+
 
 # Меню "О школе"
 def about_school_menu_keyboard():
@@ -22,6 +27,7 @@ def about_school_menu_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 # Меню "О каникулах"
 def holidays_menu_keyboard():
     keyboard = [
@@ -32,6 +38,7 @@ def holidays_menu_keyboard():
         [InlineKeyboardButton("Вернуться назад", callback_data='about_school')]
     ]
     return InlineKeyboardMarkup(keyboard)
+
 
 # Меню "Предоставляемые услуги"
 def services_menu_keyboard():
@@ -45,13 +52,14 @@ def services_menu_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 # Функция для приветственного сообщения
 async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     await update.message.reply_html(
         rf"Привет, {user.mention_html()}! Добро пожаловать в школу 'Третье место'! "
         "Я бот техподдержки, и я здесь, чтобы помочь вам. Вы можете использовать кнопки ниже, чтобы получить нужную информацию.",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Начать общение", callback_data='main_menu')]]),
     )
 
 
@@ -63,6 +71,7 @@ async def about_school(update: Update, context: CallbackContext) -> None:
         "Выберите интересующую вас информацию:",
         reply_markup=about_school_menu_keyboard()
     )
+
 
 # Функции для обработки конкретных запросов в меню "О школе"
 async def services(update: Update, context: CallbackContext) -> None:
@@ -87,7 +96,7 @@ async def makeup_classes(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "Об 'отработках' пропусков: Пропущенные занятия можно отработать в следующие даты...",
+        text=missed_lessons,
         reply_markup=about_school_menu_keyboard()
     )
 
@@ -96,7 +105,7 @@ async def payment(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "Об оплате: Оплата производится через ...",
+        text=about_payment,
         reply_markup=about_school_menu_keyboard()
     )
 
@@ -105,7 +114,8 @@ async def important_links(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "Важные ссылки: [Наш сайт](https://example.com)",
+        "Важные ссылки: Сайт школы - (https://ed.3place.ru/#about); Сайт, где проводится основное обучение - (https://dvmn.org);"
+        " Для записи на диагностику или связи с менеджером по любому вопросу напишите в чат: https://t.me/Sc_sort_bot",
         reply_markup=about_school_menu_keyboard()
     )
 
@@ -114,7 +124,7 @@ async def about_third_place(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "О 'Третьем месте': Школа 'Третье место' - это место, где каждый ученик получает индивидуальное внимание и поддержку.",
+        text=about_3rd_place,
         reply_markup=about_school_menu_keyboard()
     )
 
@@ -124,7 +134,7 @@ async def call_operator(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
-        "Если вы не нашли ответы на интересующие вас вопросы, пожалуйста, обратитесь к нашему оператору: [Позвать оператора](https://t.me/Sc_sort_bot)",
+        "Если вы не нашли ответы на интересующие вас вопросы, пожалуйста, обратитесь к нашему оператору: (https://t.me/Sc_sort_bot)",
         reply_markup=main_menu_keyboard()
     )
 
@@ -159,8 +169,9 @@ async def button(update: Update, context: CallbackContext) -> None:
 
 # Основная функция для запуска бота
 def main() -> None:
+    load_dotenv()
     # Вставьте свой токен здесь
-    application = Application.builder().token("7380678860:AAHg0c12KXSkj3_kZRDNSH2kUkzdQQKd2vs").build()
+    application = Application.builder().token(f'{os.getenv("TOKEN")}').build()
 
     # Обработчики команд
     application.add_handler(CommandHandler("start", start))
